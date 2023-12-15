@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load static %} 
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <title>Employee Hierarchy</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Employee Hierarchy</h1>
+        <h2>Hierarchy Tree</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Position</th>
+                        <th>Subordinates</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee_tree in hierarchy_tree %}
+                        <tr>
+                            <td>{{ employee_tree.employee.full_name }}</td>
+                            <td>{{ employee_tree.employee.get_position_display }}</td>
+                            <td>
+                                {% if employee_tree.subordinates %}
+                                    <ul>
+                                        {% for subordinate_tree in employee_tree.subordinates %}
+                                            <li>{{ subordinate_tree.employee.full_name }} - {{ subordinate_tree.employee.get_position_display }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Employee Details</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Employee Details</h1>
+        <dl class="row">
+            <dt class="col-sm-3">Full Name:</dt>
+            <dd class="col-sm-9">{{ object.full_name }}</dd>
+
+            <dt class="col-sm-3">Position:</dt>
+            <dd class="col-sm-9">{{ object.get_position_display }}</dd>
+
+            <dt class="col-sm-3">Joined:</dt>
+            <dd class="col-sm-9">{{ object.joined }}</dd>
+
+            <dt class="col-sm-3">Email:</dt>
+            <dd class="col-sm-9">{{ object.email }}</dd>
+
+            <dt class="col-sm-3">Boss:</dt>
+            <dd class="col-sm-9">{{ object.boss.full_name|default:"None" }}</dd>
+        </dl>
+    </div>
+</body>
+</html>
