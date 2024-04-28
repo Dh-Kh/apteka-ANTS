@@ -84,7 +84,7 @@ This project is an Employee Management System built with Django, allowing users 
 
 - Make sure to replace `<employee_id>` with the actual ID of the employee you want to view, update, or delete.
 - For views requiring authentication, ensure you are logged in before accessing them.
-- Create 50000 records.
+- manage.py seed_data Create 50000 records.
 ```bash
 python -m venv venv
 venv\Scripts\activate
@@ -115,11 +115,11 @@ python manage.py runserver
 ### Сторінка списку співробітників
 
 - Реалізовано додаткову сторінку для відображення повного списку співробітників з усією доступною інформацією з бази даних.
-- Забезпечено можливість сортування списку співробітників за будь-яким полем.
+- Забезпечено можливість сортування списку співробітників.
 
 ### Пошук співробітників
 
-- Додано можливість виконувати пошук співробітників за будь-яким полем.
+- Додано можливість виконувати пошук співробітників.
 
 ### Сортування та пошук AJAX
 
