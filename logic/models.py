@@ -13,7 +13,6 @@ class EmployeeModel(MP_Node):
             ]
     
     HIERARCHY = (
-        (8, "Owner"),
         (7, "SEO"),
         (6, "Team Lead"),
         (5, "Tech Lead"),
