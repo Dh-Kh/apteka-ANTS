@@ -1,33 +1,130 @@
-from django.views.generic import (ListView, CreateView ,DetailView,
-                                  UpdateView, DeleteView)
-from django.contrib.auth.views import LoginView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from django.contrib.messages.views import SuccessMessageMixin
-from django.contrib import messages
-from django.http import JsonResponse
+from rest_framework.generics import (ListAPIView, CreateAPIView, 
+                                     RetrieveUpdateAPIView)
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
+from rest_framework.decorators import action
+from rest_framework import status
+from django.contrib.auth import authenticate, logout
+from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import get_object_or_404
 from .models import EmployeeModel
-from .forms import CustomUserCreationForm, EmployeeForm
+from .serializers import (EmployeeModelSerializer, UserSerializer)
+from .pagination import CustomPageNumberPagination
+from .filters import EmployeeFilter
 
-#need to implement lazy loading
 
-class SortEmployers(ListView):
-    model = EmployeeModel
-    template_name = ""
-    context_object_name = "queryset"
-    paginate_by = 100
+class SortEmployeeView(ListAPIView):
+    lookup_url_kwarg = "field"
+    serializer_class = EmployeeModelSerializer
+    pagination_class = CustomPageNumberPagination
     def get_queryset(self):
-        order_type = self.kwargs.get("type")
-        return EmployeeModel.objects.order_by(order_type)
+        field = self.kwargs.get(self.lookup_url_kwarg)
+        return EmployeeModel.objects.order_by(field)
+
+
+class FilterEmployeeView(ListAPIView):
+    serializer_class = EmployeeModelSerializer
+    filter_backends = (EmployeeFilter,)
+    queryset = EmployeeModel.objects.all()
+    pagination_class = CustomPageNumberPagination
+
+class RegisterView(CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     
-class FindEmployer(DetailView):
-    model = EmployeeModel
-    template_name = ""
-    context_object_name = "object"
+class LoginView(APIView):
+    def post(self, request, *args, **kwargs):
+        username = request.data.get("username")
+        password = request.dat.get("password")
+        try:
+            user = User.objects.get(username=username,
+                                    password=password)
+        except ObjectDoesNotExist:
+            pass
+        if not user:
+            user = authenticate(username=username,
+                                password=password)
+        if user:
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({'token': token.key}, status=status.HTTP_200_OK)
+        
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+    
+class LogOutView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request, *args, **kwargs):
+        logout(request)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class EmployeeViewSet(ViewSet):
+    
+    permission_classes = [IsAuthenticated]
+    
+    queryset = EmployeeModel.objects.all()
+    
+    serializer_class = EmployeeModelSerializer
+      
+    def update(self, request, pk=None):
+        try:
+            instance = get_object_or_404(self.queryset, pk=pk)
+            serializer = self.serializer_class(instance, data=request.data, partial=True)
+            if serializer.is_valid():
+                for field, value in serializer.validated_data.items():
+                    if value is not None and value != "":
+                        setattr(instance, field, value)
+                instance.save()
+                return Response({'message': 'updated'}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def destroy(self, request, pk=None):
+        try:
+            instance = get_object_or_404(self.queryset, pk=pk)
+            instance.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=True, methods=["patch"])
+    def update_parent(self, request, pk=None):
+        try:
+            instance = get_object_or_404(self.queryset, pk=pk)
+            parent = instance.get_parent()
+            serializer = self.serializer_class(parent, data=request.data, partial=True)
+            if serializer.is_valid():
+                for field, value in serializer.validated_data.items():
+                    if value is not None and value != "":
+                        setattr(instance, field, value)
+            parent.save()
+            return Response({'message': 'parent updated'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class ChangeBossView(RetrieveUpdateAPIView):
+    
+    serializer_class = EmployeeModelSerializer
+    lookup_url_kwarg = "pk"
     
     def get_object(self):
-        pass    
+        pk = self.kwargs.get(self.lookup_url_kwarg)
+        return EmployeeModel.objects.get(pk=pk)
     
+    def update(self, request, *args, **kwargs):
+        param_value = request.GET.get('full_name')
+        instance = self.get_object()
+        new_boss = EmployeeModel.objects.get(full_name=param_value)
+        instance.redistribute(new_boss)
+        return Response({'message': 'updated'}, status=status.HTTP_200_OK)
+
+
+
+
 
     
 

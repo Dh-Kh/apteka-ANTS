@@ -1,16 +1,8 @@
 from django.db import models
-from django.db.models import CheckConstraint, Q, F
+#from django.db.models import CheckConstraint, Q, F
 from treebeard.mp_tree import MP_Node
 
 class EmployeeModel(MP_Node):
-    
-    class Meta:
-        constraints = [
-            CheckConstraint(
-                check=~Q(parent__position__gte=F("position")),
-                name="parent_position_check"
-                )
-            ]
     
     HIERARCHY = (
         (7, "SEO"),
@@ -27,4 +19,10 @@ class EmployeeModel(MP_Node):
     joined = models.DateField()
     email = models.EmailField()
     
-    node_order_by = ["-position"]
+    node_order_by = ["position"]
+    
+    def redistribute(self, new_boss):
+        to_redistribute = self.get_descendants()
+        for employee in to_redistribute:
+            employee.move(new_boss, pos="sorted-child")
+        new_boss.save()
