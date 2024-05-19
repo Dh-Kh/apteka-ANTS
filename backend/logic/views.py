@@ -54,6 +54,8 @@ class LoginView(APIView):
         
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
     
+#need create API for display user credentials as username
+    
 class LogOutView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request, *args, **kwargs):
