@@ -10,42 +10,20 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         seeder = Seed.seeder()
         
-        def insert(root, value):
-            
-            if value < root.position:
-                if root.get_children():
-                    left = root.get_children().first()
-                    insert(left, value)
-                else:
-                    left = root.add_child(
-                        full_name=seeder.faker.name(), 
-                        position=value, 
-                        joined=seeder.faker.date_this_decade(), 
-                        email=seeder.faker.email()
-                        )
-                    left.move(target=root, pos="sorted-child")
-            elif root.position < value:
-                if root.get_children():
-                    right = root.get_children().last()
-                    insert(right, value)
-                else:
-                    right = root.add_child(
-                        full_name=seeder.faker.name(), 
-                        position=value, 
-                        joined=seeder.faker.date_this_decade(), 
-                        email=seeder.faker.email()
-                    )
-                    right.move(target=root, pos='sorted-child')
-            else:
-                sibling = root.add_sibling(
-                    "sorted-sibling",
-                    full_name=seeder.faker.name(),
-                    position=value,
-                    joined=seeder.faker.date_this_decade(),
+        def insert(root, levels):
+            value = randint(1, 6)
+            children_per_node = randint(1, 10)
+            if levels == 0:
+                return
+        
+            for i in range(children_per_node):
+                child = root.add_child(
+                    full_name=seeder.faker.name(), 
+                    position=value, 
+                    joined=seeder.faker.date_this_decade(), 
                     email=seeder.faker.email()
                 )
-                #insert(sibling, value)
-                
+                insert(child, levels - 1)
             
             
         root_exists = EmployeeModel.objects.filter(path__isnull=True).exists()
@@ -60,8 +38,7 @@ class Command(BaseCommand):
         else:
             root = EmployeeModel.objects.get(path__isnull=True)
         
-        for i in range(50):
-            value = randint(1, 6)
-            insert(root, value)
+    
+        insert(root, levels=3)
         
         self.stdout.write(self.style.SUCCESS('Completed!'))
