@@ -3,9 +3,9 @@ const axios = require("axios");
 const path = require('path');
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const app = express();
 const port = 3000;
-
 const API_URL = "http://localhost:8000/api/";
 
 app.set('view engine', 'ejs');
@@ -20,27 +20,36 @@ const corsOptions = {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
+app.use(cookieParser());
 
 app.use(express.static(path.join(__dirname, "public")));
 
 
 const api = axios.create({
-    baseUrl: API_URL
+    baseURL: API_URL
 });
 
 const apiAuth = axios.create({
-    baseUrl: API_URL
+    baseURL: API_URL
 });
 
 apiAuth.interceptors.request.use(config => {
-    const token = localStorage.getItem("token");
+    const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1];
     if (token) {
         config.headers.Authorization = `Token ${token}`;
     }
     return config;
 });
 
-app.get("/", (res, req) => {
+const COOKIE_OPTIONS = {
+    maxAge: 14 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+}
+
+app.get("/", (req, res) => {
     res.render("dashboard")
 });
 
@@ -68,7 +77,7 @@ app.post("/login", async(req, res) => {
     try {
         const response = await api.post('login/', req.body);
         const token = response.data;
-        localStorage.setItem("token", token);
+        res.cookie("token", token);
         res.redirect("/");
     } catch (error) {
         res.render("login", {error: "Invalid credentials"});
@@ -78,7 +87,7 @@ app.post("/login", async(req, res) => {
 app.post("/logout", async(req, res) => {
     try {
         await apiAuth.post("logout/");
-        localStorage.removeItem("token");
+        res.clearCookie("token");
         res.redirect("/login")
     } catch (error) {
         res.render("logout", {error: "An error occured"});

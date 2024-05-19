@@ -39,21 +39,16 @@ class RegisterView(CreateAPIView):
 class LoginView(APIView):
     def post(self, request, *args, **kwargs):
         username = request.data.get("username")
-        password = request.dat.get("password")
-        try:
-            user = User.objects.get(username=username,
-                                    password=password)
-        except ObjectDoesNotExist:
-            pass
-        if not user:
-            user = authenticate(username=username,
-                                password=password)
+        password = request.data.get("password")
+        user = None
+
+        user = authenticate(username=username, password=password)
+        
         if user:
             token, _ = Token.objects.get_or_create(user=user)
             return Response({'token': token.key}, status=status.HTTP_200_OK)
         
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
-    
 #need create API for display user credentials as username
     
 class LogOutView(APIView):
