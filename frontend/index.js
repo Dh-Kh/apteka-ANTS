@@ -28,7 +28,6 @@ app.use(apiMiddleware);
 
 app.use(express.static(path.join(__dirname, "public")));
 
-
 const api = axios.create({
     baseURL: API_URL
 });
@@ -80,6 +79,22 @@ app.post("/logout", async(req, res) => {
     } finally {
         res.clearCookie("token");
         res.redirect("/login")
+    }
+});
+
+app.get("/sort", async(req, res) => {
+    try {
+        let param = req.query.sortParam || "position";
+        let page = req.query.page || 1;
+        const response = await api.get(`sort/${param}/?page=${page}`);
+        res.render("sort", {
+            data: response.data.results,
+            currentPage: page,
+            totalPages: response.data.count,
+            sortParam: param
+        });
+    } catch (error) {
+        res.render("sort", {error: "An error occured during sorting"})
     }
 });
 

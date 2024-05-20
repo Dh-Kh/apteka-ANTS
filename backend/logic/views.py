@@ -65,31 +65,11 @@ class EmployeeViewSet(ModelViewSet):
     
     serializer_class = EmployeeModelSerializer
     
-    @action(detail=True, methods=["patch"])
-    def partial_update(self, request, pk=None):
-        try:
-            instance = get_object_or_404(self.queryset, pk=pk)
-            serializer = self.serializer_class(instance, data=request.data, partial=True)
-            if serializer.is_valid():
-                for field, value in serializer.validated_data.items():
-                    if value is not None and value != "":
-                        setattr(instance, field, value)
-                instance.save()
-                return Response({'message': 'updated'}, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    pagination_class = CustomPageNumberPagination
     
-    @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated()])
-    def destroy(self, request, pk=None):
-        try:
-            instance = get_object_or_404(self.queryset, pk=pk)
-            instance.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
-    @action(detail=True, methods=["patch"], permission_classes=[IsAuthenticated])
+    permission_classes = [IsAuthenticated]
+         
+    @action(detail=True, methods=["patch"])
     def update_parent(self, request, pk=None):
         try:
             instance = get_object_or_404(self.queryset, pk=pk)

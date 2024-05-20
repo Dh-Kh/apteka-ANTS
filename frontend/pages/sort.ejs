@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sorting</title>
+  <script>
+     function pagination(page) {
+        const urlParams = new URLSearchParams(window.location.search);
+        rlParams.set('page', page);
+        urlParams.set('sortParam', document.getElementById('sortParam').value); 
+        window.location.search = urlParams.toString();
+     }
+  </script>
+</head>
+<body>
+  <h2>Sorting</h2>
+  <form action="/sort" method="get">
+    <div>
+        <label for="sortParam">Sort by:</label>
+        <select id="sortParam", name="sortParam">
+            <option value="-position">Position reversed</option>
+            <option value="position">Position</option>
+            <option value="-joined">Latest</option>
+            <option value="joined">Earliest</option>
+        </select>
+    </div>
+    <button type="submit">Sort</button>
+  </form>
+  <% if (typeof error !== 'undefined') { %>
+    <p style="color: red;"><%= error %></p>
+  <% } %>
+
+
+
+  <% if (data) { %> 
+
+    <h2>Sorted Results: Page <%= currentPage %> of <%= totalPages %></h2>
+    <div class="pagination">
+        <button id="previous" onclick="pagination('<%= currentPage - 1 %>')" <%= currentPage === 1 ? 'disabled' : '' %>>Previous</button>
+        <button id="next" onclick="pagination('<%= currentPage + 1 %>')" <%= currentPage === totalPages ? 'disabled' : '' %>>Next</button>
+    </div>
+    <ul>
+        <% data.forEach(item => { %> 
+            <li>
+                Full name: <%= item.full_name %><br>
+                Email: <%= item.email %><br>
+                Position: <%= item.position %><br>
+                Date joined: <%= item.joined %>
+            </li>
+        <% }); %>
+    </ul>
+    <% } %>
+</body>
+</html>
