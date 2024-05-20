@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Dashboard</title>
+    </head>
+    <body>
+        <%- include("logout");%>
+        <h1>Dashboard</h1>
+        <% if (typeof error !== 'undefined') { %>
+            <p style="color: red;"><%= error %></p>
+        <% } %>
+    </body>
+</html>

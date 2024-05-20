@@ -22,26 +22,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 app.use(cookieParser());
 
+const apiMiddleware = require('./apiMiddleware').default;
+
+app.use(apiMiddleware);
+
 app.use(express.static(path.join(__dirname, "public")));
 
 
 const api = axios.create({
     baseURL: API_URL
-});
-
-const apiAuth = axios.create({
-    baseURL: API_URL
-});
-
-apiAuth.interceptors.request.use(config => {
-    const token = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('token='))
-        ?.split('=')[1];
-    if (token) {
-        config.headers.Authorization = `Token ${token}`;
-    }
-    return config;
 });
 
 const COOKIE_OPTIONS = {
@@ -56,8 +45,6 @@ app.get("/", (req, res) => {
 app.get("/register", (req, res) => {
     res.render("register");
 });
-
-{/* CHECK WHY POST REQUESTS AREN'T SENDING*/}
 
 app.post("/register", async(req, res) => {
     try {
@@ -76,23 +63,25 @@ app.get("/login", (req, res) => {
 app.post("/login", async(req, res) => {
     try {
         const response = await api.post('login/', req.body);
-        const token = response.data;
-        res.cookie("token", token);
+        const token = response.data.token;
+        res.cookie("token", token, COOKIE_OPTIONS);
         res.redirect("/");
     } catch (error) {
         res.render("login", {error: "Invalid credentials"});
     }
 });
 
+
 app.post("/logout", async(req, res) => {
     try {
-        await apiAuth.post("logout/");
+        await req.apiAuth.post("logout/");
+    } catch (error) {
+        res.render("dashboard", {error: "An error occured during logout"});
+    } finally {
         res.clearCookie("token");
         res.redirect("/login")
-    } catch (error) {
-        res.render("logout", {error: "An error occured"});
     }
-})
+});
 
 app.listen(port, () => {
     console.log("Server is running")

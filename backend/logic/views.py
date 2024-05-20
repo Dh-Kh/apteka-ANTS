@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework import status
 from django.contrib.auth import authenticate, logout
@@ -57,15 +57,16 @@ class LogOutView(APIView):
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-class EmployeeViewSet(ViewSet):
+
     
-    permission_classes = [IsAuthenticated]
-    
+class EmployeeViewSet(ModelViewSet):
+
     queryset = EmployeeModel.objects.all()
     
     serializer_class = EmployeeModelSerializer
-      
-    def update(self, request, pk=None):
+    
+    @action(detail=True, methods=["patch"])
+    def partial_update(self, request, pk=None):
         try:
             instance = get_object_or_404(self.queryset, pk=pk)
             serializer = self.serializer_class(instance, data=request.data, partial=True)
@@ -79,6 +80,7 @@ class EmployeeViewSet(ViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
+    @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated()])
     def destroy(self, request, pk=None):
         try:
             instance = get_object_or_404(self.queryset, pk=pk)
@@ -87,7 +89,7 @@ class EmployeeViewSet(ViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
-    @action(detail=True, methods=["patch"])
+    @action(detail=True, methods=["patch"], permission_classes=[IsAuthenticated])
     def update_parent(self, request, pk=None):
         try:
             instance = get_object_or_404(self.queryset, pk=pk)
@@ -103,21 +105,6 @@ class EmployeeViewSet(ViewSet):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 
-class ChangeBossView(RetrieveUpdateAPIView):
-    
-    serializer_class = EmployeeModelSerializer
-    lookup_url_kwarg = "pk"
-    
-    def get_object(self):
-        pk = self.kwargs.get(self.lookup_url_kwarg)
-        return EmployeeModel.objects.get(pk=pk)
-    
-    def update(self, request, *args, **kwargs):
-        param_value = request.GET.get('full_name')
-        instance = self.get_object()
-        new_boss = EmployeeModel.objects.get(full_name=param_value)
-        instance.redistribute(new_boss)
-        return Response({'message': 'updated'}, status=status.HTTP_200_OK)
 
 
 
