@@ -5,9 +5,9 @@ class EmployeeFilter(filters.FilterSet):
     class Meta:
         model = EmployeeModel
         fields = {
-            'full_name': ['exact', 'icontains'],
+            'full_name': ['icontains'],
             'position': ['exact'],
             'joined': ['exact', 'gte', 'lte'],
-            'email': ['exact', 'icontains'],
+            'email': ['icontains'],
         }
         

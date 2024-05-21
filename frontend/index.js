@@ -82,21 +82,77 @@ app.post("/logout", async(req, res) => {
     }
 });
 
+{/* Need to merge sort and filter .ejs 
+GET /api/filter/?full_name__icontains=Mic&position=4&joined=&joined__gte=2022-05-026&joined__lte=&email__icontains=
+*/}
+
+
 app.get("/sort", async(req, res) => {
     try {
         let param = req.query.sortParam || "position";
         let page = req.query.page || 1;
         const response = await api.get(`sort/${param}/?page=${page}`);
-        res.render("sort", {
-            data: response.data.results,
-            currentPage: page,
-            totalPages: response.data.count,
-            sortParam: param
+        paginationMiddleware(response)(req, res, () => {
+            res.render("sort", {
+                data: req.data,
+                currentPage: req.page,
+                totalPages: req.totalPages,
+                sortParam: param
+            });
         });
     } catch (error) {
-        res.render("sort", {error: "An error occured during sorting"})
+        res.render("sort", {error: "An error occured during sorting"});
     }
 });
+
+app.get("/filter", async(req, res) => {
+    
+    try {
+        const filterParams = {
+            full_name: String,
+            position: Number,
+            joined: Date,
+            email: String
+        };
+
+        const filterCondition = Object.fromEntries(
+            Object.entries(filterParams)
+            .filter((_, value) => value !== "")
+        );
+
+        const paramsJoin = Object.keys(filterCondition).map((key) => {
+            return `${encodeURIComponent(key)}=${encodeURIComponent(filterCondition[key])}`
+        })
+        .join("&");
+
+        let page = req.query.page || 1;
+
+        const response = await api.get(`filter/?page=${page}/${paramsJoin}`);
+
+        paginationMiddleware(response)(req, res, () => {
+            res.render("filter", {
+                data: req.data,
+                currentPage: req.page,
+                totalPages: req.totalPages
+            });
+        });
+
+    } catch (error) {
+        res.render("filter", {error: "An error occured during filtering"});
+    }
+});
+
+{/* Modify pagination middleware to make as separete .js file */}
+
+function paginationMiddleware(response) {
+    return (req, res, next) => {
+        req.data = response.data.results;
+        req.page = parseInt(req.query.page) || 1;
+        req.totalPages = Math.ceil(response.data.count / 10);
+        next();
+    }
+}
+
 
 app.listen(port, () => {
     console.log("Server is running")

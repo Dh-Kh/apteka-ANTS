@@ -10,6 +10,7 @@ from rest_framework import status
 from django.contrib.auth import authenticate, logout
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django_filters import rest_framework as filters
 from django.shortcuts import get_object_or_404
 from .models import EmployeeModel
 from .serializers import (EmployeeModelSerializer, UserSerializer)
@@ -28,8 +29,9 @@ class SortEmployeeView(ListAPIView):
 
 class FilterEmployeeView(ListAPIView):
     serializer_class = EmployeeModelSerializer
-    filter_backends = (EmployeeFilter,)
     queryset = EmployeeModel.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = EmployeeFilter
     pagination_class = CustomPageNumberPagination
 
 class RegisterView(CreateAPIView):
