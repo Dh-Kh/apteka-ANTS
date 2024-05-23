@@ -6,8 +6,8 @@
 
         const filterParams = {
             "full_name": "",
-            "position": null,
-            "joined": [new Date(null), new Date(null)],
+            "position": 0,
+            "joined": [null, null],
             "email": "",
         };
 
@@ -15,27 +15,17 @@
 
             if (key === "joined") {
                 const dateIndex = this.id = "startJoinedInput" ? 0 : 1;
-                filterParams[key][dateIndex] = new Date(value);
+                filterParams[key][dateIndex] = value ? new Date(value) : null;
             } else {
                 filterParams[key] = value;
             }
         };
 
-        const filterForm = document.querySelector("form");
-
-        filterForm.addEventListener("submit", function(event) {
-            event.preventDefault(); 
-
-            modifyParams();
-
-            filterForm.submit(); 
-        });
-
-        function modifyParams(paramsValues) {
+        function modifyParams() {
             const filterCondition = Object.fromEntries(
                 Object.entries(filterParams)
                 .filter(([_, value]) => value !== "" && 
-                    (!Array.isArray(value) || (value[0] instanceof Date && value[1] instanceof Date && !isNaN(value[0]) && !isNaN(value[1])))
+                    (!Array.isArray(value) || (value[0] instanceof Date && value[1] instanceof Date && !isNaN(value[0]) && !isNaN(value[1]))) && value !== 0
                 )
                 .map(([key, value]) => [key, Array.isArray(value) ? value.map(date => date.toISOString().slice(0, 10)).join(",") : value]) 
             );
@@ -46,7 +36,7 @@
             .join("&");
             const queryParams = new URLSearchParams(paramsJoin).toString();
 
-            filterForm.action = `/filter?${queryParams}`;
+            window.location.href = `/filter?${queryParams}`;
 
         };
 
@@ -56,8 +46,8 @@
 </head>
 <body>
     <h2>Filter</h2>
-    <form action="/filter" method="get">
-        <input type="text" id="fullNameInput" placeholder="Search something..." onchange="paramsOnChange('full_name', this.value)""/>
+    <form action="/filter" method="get" onsubmit="modifyParams(); return false;"> 
+        <input type="text" id="fullNameInput" placeholder="Search something..." onchange="paramsOnChange('full_name', this.value)"/>
         <input type="number" id="positionInput" placeholder="Type position..." onchange="paramsOnChange('position', this.value)"/>
         <label for="start">Date Start:</label>
         <input type="datetime-local" id="startJoinedInput" onchange="paramsOnChange('joined', this.value)"><br>
@@ -66,7 +56,6 @@
         <input type="email" id="emailInput" placeholder="Type email..." onchange="paramsOnChange('email', this.value)"/>
         <button type="submit">Filter</button>
     </form>
-
     <% if (data) { %>
         <ul>
             <% data.forEach(item => { %> 
@@ -79,7 +68,6 @@
             <% }); %>
         </ul>
     <% } %>
-
 
     <% if (typeof error !== 'undefined') { %>
         <p style="color: red;"><%= error %></p>

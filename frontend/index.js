@@ -111,7 +111,7 @@ app.get("/filter", async(req, res) => {
 
         const filterParams = req.query; 
         
-        const response = await api.get(`filter/${filterParams}`);
+        const response = await api.get(`filter/?${new URLSearchParams(filterParams).toString()}`);
 
         res.render("filter", {
             data: response.data.results,
