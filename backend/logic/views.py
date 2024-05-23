@@ -1,5 +1,5 @@
 from rest_framework.generics import (ListAPIView, CreateAPIView, 
-                                     RetrieveUpdateAPIView)
+                                     UpdateAPIView, RetrieveAPIView)
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
@@ -13,7 +13,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django_filters import rest_framework as filters
 from django.shortcuts import get_object_or_404
 from .models import EmployeeModel
-from .serializers import (EmployeeModelSerializer, UserSerializer)
+from .serializers import (EmployeeModelSerializer, UserSerializer, 
+                          DisplayUserSerializer)
 from .pagination import CustomPageNumberPagination
 from .filters import EmployeeFilter
 
@@ -51,7 +52,7 @@ class LoginView(APIView):
             return Response({'token': token.key}, status=status.HTTP_200_OK)
         
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
-#need create API for display user credentials as username
+
     
 class LogOutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -59,6 +60,13 @@ class LogOutView(APIView):
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
     
+
+class DisplayUserView(RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = DisplayUserSerializer
+    
+    def get_object(self):
+        return get_object_or_404(User, id=self.request.user.id)
 
     
 class EmployeeViewSet(ModelViewSet):
@@ -82,10 +90,40 @@ class EmployeeViewSet(ModelViewSet):
                     if value is not None and value != "":
                         setattr(instance, field, value)
             parent.save()
+            parent.check_demotion()
             return Response({'message': 'parent updated'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+#maybe need to merge with EmployeeViewSet
+    
+class ReassignEmployeeView(UpdateAPIView):
+    lookup_url_kwarg = "id"
+    serializer_class = EmployeeModelSerializer
+    
+    def get_queryset(self):
+        id = self.kwargs.get(self.lookup_url_kwarg)
+        return get_object_or_404(EmployeeModel, id=id)
+    
+    def get_previous_boss(self):
+        previous_boss_id = self.request.GET.get("previous_boss")
+        return get_object_or_404(EmployeeModel, id=previous_boss_id)
+    
+    def update(self, request, *args, **kwargs):
         
+        employee = self.get_queryset()
+        previous_boss = self.get_previous_boss()
+
+        if not employee or not previous_boss:
+            return Response({'error': "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        previous_boss.redistribute(employee)
+                
+        return Response({'message': "childs reassigned"}, status=status.HTTP_200_OK)
+        
+        
+        
+            
 
 
 

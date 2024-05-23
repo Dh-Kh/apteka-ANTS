@@ -6,13 +6,13 @@ class EmployeeModelSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = EmployeeModel
-        fields = "__all__"
+        fields = ["full_name", "position", "email",]
         
 class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ["username", "email", "password"]
+        fields = ["username", "email", "password",]
         extra_kwargs = {"password": {"write_only": True}}
         
     def create(self, validated_data):
@@ -23,3 +23,8 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data["password"])
         user.save()
         return user
+    
+class DisplayUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username",]

@@ -11,20 +11,23 @@ class Command(BaseCommand):
         seeder = Seed.seeder()
         
         def insert(root, levels):
-            value = randint(1, 6)
             children_per_node = randint(1, 10)
             if levels == 0:
                 return
         
-            for i in range(children_per_node):
-                child = root.add_child(
-                    full_name=seeder.faker.name(), 
-                    position=value, 
-                    joined=seeder.faker.date_this_decade(), 
-                    email=seeder.faker.email()
-                )
-                insert(child, levels - 1)
-            
+        
+            for _ in range(children_per_node):
+                value = randint(1, 6)
+                if value < root.position:
+                    child = root.add_child(
+                        full_name=seeder.faker.name(), 
+                        position=value,
+                        joined=seeder.faker.date_this_decade(), 
+                        email=seeder.faker.email()
+                        )
+                    insert(child, levels - 1)
+                
+                    
             
         root_exists = EmployeeModel.objects.filter(path__isnull=True).exists()
         
@@ -39,6 +42,15 @@ class Command(BaseCommand):
             root = EmployeeModel.objects.get(path__isnull=True)
         
     
-        insert(root, levels=3)
+        insert(root, levels=5)
         
         self.stdout.write(self.style.SUCCESS('Completed!'))
+        
+#function backtracking(choosen):
+#   if valid_solution?(choosen):
+#      perform_action_with(choosen) // save, print, etc
+#   else:
+#      for each option we can take here:
+#         choosen = choose_one(option)   // choose
+#         backtracking(choosen)          // explore
+#         choosen = unchoose(option)     // unchoose
