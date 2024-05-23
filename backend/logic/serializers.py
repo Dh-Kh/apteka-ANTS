@@ -6,7 +6,7 @@ class EmployeeModelSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = EmployeeModel
-        fields = ["full_name", "position", "email",]
+        fields = ["full_name", "position", "email", "joined"]
         
 class UserSerializer(serializers.ModelSerializer):
     

@@ -34,6 +34,8 @@ class FilterEmployeeView(ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = EmployeeFilter
     pagination_class = CustomPageNumberPagination
+    
+#merge filter and sort
 
 class RegisterView(CreateAPIView):
     queryset = User.objects.all()

@@ -108,34 +108,15 @@ app.get("/sort", async(req, res) => {
 app.get("/filter", async(req, res) => {
     
     try {
-        const filterParams = {
-            full_name: String,
-            position: Number,
-            joined: Date,
-            email: String
-        };
 
-        const filterCondition = Object.fromEntries(
-            Object.entries(filterParams)
-            .filter((_, value) => value !== "")
-        );
+        const filterParams = req.query; 
+        
+        const response = await api.get(`filter/${filterParams}`);
 
-        const paramsJoin = Object.keys(filterCondition).map((key) => {
-            return `${encodeURIComponent(key)}=${encodeURIComponent(filterCondition[key])}`
-        })
-        .join("&");
-
-        let page = req.query.page || 1;
-
-        const response = await api.get(`filter/?page=${page}/${paramsJoin}`);
-
-        paginationMiddleware(response)(req, res, () => {
-            res.render("filter", {
-                data: req.data,
-                currentPage: req.page,
-                totalPages: req.totalPages
-            });
+        res.render("filter", {
+            data: response.data.results,
         });
+    
 
     } catch (error) {
         res.render("filter", {error: "An error occured during filtering"});
